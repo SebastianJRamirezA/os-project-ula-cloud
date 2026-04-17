@@ -35,14 +35,7 @@ int spawn_service(int index) {
     // - Lógica del proceso HIJO (Setup de límites y Ejecución).
     else if (pid == 0) {
 
-        struct rlimit limit;
-        limit.rlim_cur = dashboard[index].mem_limit; 
-        limit.rlim_max = dashboard[index].mem_limit;
-
-        if (setrlimit(RLIMIT_AS, &limit) == -1) {
-            perror("Error al establecer límite");
-            exit(EXIT_FAILURE);
-        }
+        apply_resource_limits(dashboard[index].mem_limit);
         
         char *args[] = {dashboard[index].path, NULL}; 
         execvp(args[0], args); 

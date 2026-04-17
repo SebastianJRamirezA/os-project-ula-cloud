@@ -17,4 +17,14 @@ void apply_resource_limits(size_t mem_limit) {
     // Casos a considerar:
     // - ¿Qué diferencia hay entre rlim_cur y rlim_max?
     // - ¿Qué sucede si el límite solicitado es menor al tamaño del propio binario?
+
+    struct rlimit limit;
+    limit.rlim_cur = mem_limit; 
+    limit.rlim_max = mem_limit;
+
+    if (setrlimit(RLIMIT_AS, &limit) == -1) {
+        perror("Error al establecer límite");
+        exit(EXIT_FAILURE);
+    }
+
 }
