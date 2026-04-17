@@ -31,6 +31,23 @@ void print_dashboard() {
     printf("--------------------------------------------------------------\n");
 
     // TODO: Renderizar cada fila del dashboard con la información actualizada.
+    for(int i = 0; i < num_services; i++) {
+        pthread_mutex_lock(&dashboard_mutex);
+        service_t svc = dashboard[i];
+        pthread_mutex_unlock(&dashboard_mutex);
+
+        const char *state_str;
+        switch (svc.state) {
+            case STATE_IDLE: state_str = "IDLE"; break;
+            case STATE_RUNNING: state_str = "RUNNING"; break;
+            case STATE_CRASHED: state_str = "CRASHED"; break;
+            case STATE_KILLED: state_str = "KILLED"; break;
+            case STATE_STOPPED: state_str = "STOPPED"; break;
+            default: state_str = "UNKNOWN"; break;
+        }
+
+        printf("%-15s %-10d %-15s %-10d\n", svc.name, svc.pid, state_str, svc.exit_status);
+    }
 
     printf("==============================================================\n");
 }
@@ -79,6 +96,7 @@ int main(int argc, char *argv[]) {
         /* * TODO: Orquestar el despliegue de servicios y su posterior 
          * monitoreo concurrente. 
          */
+        spawn_service(i);
     }
 
     // 5. Ciclo de monitoreo principal
