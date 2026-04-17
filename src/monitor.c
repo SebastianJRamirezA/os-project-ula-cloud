@@ -14,9 +14,12 @@
  */
 void* monitor_service(void *arg) {
     // TODO: Castear el argumento al tipo de dato correcto.
+    service_t *service = (service_t *)arg;
     
     // TODO: Implementar la espera del proceso específico.
     // Ayuda: Revisar el uso de waitpid(pid, &status, 0).
+    int status;
+    waitpid(service->pid, &status, 0);
 
     /* * Una vez que waitpid retorna, el proceso hijo ha cambiado de estado.
      * TODO: Analizar el 'status' usando las macros de sys/wait.h:
@@ -25,6 +28,17 @@ void* monitor_service(void *arg) {
      * - WIFSIGNALED: ¿Fue terminado por una señal (Segfault, OOM Killer)?
      * - WTERMSIG: ¿Qué señal lo mató?
      */
+
+     if (WIFEXITED(status)) {
+        service->state = (WEXITSTATUS(status) == 0) ? STATE_STOPPED : STATE_CRASHED;
+        service->exit_status = WEXITSTATUS(status);
+     } else if (WIFSIGNALED(status)) {
+        service->state = STATE_KILLED;
+        service->exit_status = WTERMSIG(status);
+     } else {
+        service->state = STATE_CRASHED; // Estado indeterminado, marcar como CRASHED
+        service->exit_status = -1; // Código de salida desconocido
+     }
 
     /*
      * TODO: Actualizar el dashboard global.
