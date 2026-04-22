@@ -60,6 +60,16 @@ void handle_shutdown(int sig) {
     printf("\n[ULA-Cloud] Iniciando secuencia de apagado...\n");
     
     // TODO: Notificar y limpiar recursos de procesos hijos.
+    for (int i = 0; i < num_services; i++) {
+        pthread_mutex_lock(&dashboard_mutex);
+        if (dashboard[i].state == STATE_RUNNING) {
+            printf("Terminando servicio %s (PID %d)...\n", dashboard[i].name, dashboard[i].pid);
+            kill(dashboard[i].pid, SIGTERM); // Enviar señal de terminación
+        }
+        pthread_mutex_unlock(&dashboard_mutex);
+
+        pthread_join(dashboard[i].monitor_thread, NULL); // Esperar a que el hilo monitor termine
+    }
     
     exit(0);
 }
@@ -96,7 +106,12 @@ int main(int argc, char *argv[]) {
         /* * TODO: Orquestar el despliegue de servicios y su posterior 
          * monitoreo concurrente. 
          */
-        spawn_service(i);
+        int pid = spawn_service(i);
+        if (pid < 0) {
+            fprintf(stderr, "Error al lanzar el servicio %s\n", dashboard[i].name);
+        } else {
+            printf("Servicio %s lanzado con PID %d\n", dashboard[i].name, pid);
+        }
     }
 
     // 5. Ciclo de monitoreo principal

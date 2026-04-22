@@ -48,6 +48,8 @@ int spawn_service(int index) {
     else {
         dashboard[index].pid = pid;
         dashboard[index].state = STATE_RUNNING;
+
+        pthread_create(&dashboard[index].monitor_thread, NULL, monitor_service, (void *)&dashboard[index]);
     }
 
     return pid; // Cambiar por el PID real
