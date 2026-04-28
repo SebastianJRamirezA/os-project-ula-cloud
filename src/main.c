@@ -71,7 +71,7 @@ void handle_shutdown(int sig) {
         pthread_join(dashboard[i].monitor_thread, NULL); // Esperar a que el hilo monitor termine
     }
     
-    exit(0);
+    exit(sig);
 }
 
 int main(int argc, char *argv[]) {
@@ -98,6 +98,13 @@ int main(int argc, char *argv[]) {
     strcpy(dashboard[2].name, "Leak");
     strcpy(dashboard[2].path, "./bin/leak");
     dashboard[2].mem_limit = 20 * 1024 * 1024; // Límite de 20MB
+
+    if (argc > 1 && strcmp(argv[1], "--mem") ==0) {
+        size_t mem_limit = atoi(argv[2]) * 1024 * 1024; // Convertir MB a bytes
+        for (int i = 0; i < num_services; i++) {
+            dashboard[i].mem_limit = mem_limit;
+        }
+    }
 
     // 4. Activación del ecosistema
     printf("[ULA-Cloud] Inicializando %d microservicios...\n", num_services);
