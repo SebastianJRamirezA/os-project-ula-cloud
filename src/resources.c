@@ -23,7 +23,6 @@ void apply_resource_limits(size_t mem_limit) {
     limit.rlim_max = mem_limit;
 
     if (setrlimit(RLIMIT_AS, &limit) == -1) {
-        perror("Error al establecer límite");
         exit(EXIT_FAILURE);
     }
 

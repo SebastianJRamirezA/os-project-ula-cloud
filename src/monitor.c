@@ -29,6 +29,7 @@ void* monitor_service(void *arg) {
      * - WTERMSIG: ¿Qué señal lo mató?
      */
 
+     pthread_mutex_lock(&dashboard_mutex);
      if (WIFEXITED(status)) {
         service->state = (WEXITSTATUS(status) == 0) ? STATE_STOPPED : STATE_CRASHED;
         service->exit_status = WEXITSTATUS(status);
@@ -45,6 +46,7 @@ void* monitor_service(void *arg) {
      * ¡CRÍTICO!: El acceso al array 'dashboard' debe estar protegido. 
      * No olvides liberar el mecanismo de sincronización al terminar.
      */
+     pthread_mutex_unlock(&dashboard_mutex);
 
     return NULL;
 }

@@ -29,7 +29,9 @@ int spawn_service(int index) {
 
     // - Error en la creación del proceso.
     if (pid < 0) {
+        pthread_mutex_lock(&dashboard_mutex);
         dashboard[index].state = STATE_CRASHED;
+        pthread_mutex_unlock(&dashboard_mutex);
         return -1; // Error al crear el proceso
     } 
     // - Lógica del proceso HIJO (Setup de límites y Ejecución).
@@ -41,15 +43,16 @@ int spawn_service(int index) {
         execvp(args[0], args); 
 
         // Si execv retorna, es que hubo un error
-        dashboard[index].state = STATE_CRASHED;
         exit(EXIT_FAILURE);
     } 
     // - Lógica del proceso PADRE (Gestión del dashboard).
     else {
+        pthread_mutex_lock(&dashboard_mutex);
         dashboard[index].pid = pid;
         dashboard[index].state = STATE_RUNNING;
 
         pthread_create(&dashboard[index].monitor_thread, NULL, monitor_service, (void *)&dashboard[index]);
+        pthread_mutex_unlock(&dashboard_mutex);
     }
 
     return pid; // Cambiar por el PID real
