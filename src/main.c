@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
+#include <errno.h>
+#include <limits.h>
 #include "orchestrator.h"
 
 /* --- Variables Globales --- */
@@ -102,7 +104,22 @@ int main(int argc, char *argv[]) {
     dashboard[2].mem_limit = 20 * 1024 * 1024; // Límite de 20MB
 
     if (argc > 1 && strcmp(argv[1], "--mem") ==0) {
-        size_t mem_limit = atoi(argv[2]) * 1024 * 1024; // Convertir MB a bytes
+        if (argc < 3) {
+            fprintf(stderr, "Uso: %s --mem <MB>\n", argv[0]);
+            return 1;
+        }
+
+        char *endptr;
+        errno = 0;
+        unsigned long mem_mb = strtoul(argv[2], &endptr, 10);
+
+        // Validación de errores de strtoul
+        if (errno == ERANGE || *endptr != '\0' || mem_mb == 0 || mem_mb > INT_MAX) {
+            fprintf(stderr, "Error: El límite de memoria '%s' no es un valor válido.\n", argv[2]);
+            return 1;
+        }
+
+        size_t mem_limit = mem_mb * 1024 * 1024; // Convertir MB a Bytes
         for (int i = 0; i < num_services; i++) {
             dashboard[i].mem_limit = mem_limit;
         }
