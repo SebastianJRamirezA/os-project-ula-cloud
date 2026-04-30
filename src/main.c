@@ -59,6 +59,7 @@ void print_dashboard() {
  * Implementar una estrategia para evitar la proliferación de procesos huérfanos.
  */
 void handle_shutdown(int sig) {
+    (void)sig; // Evitar warning de variable no usada
     printf("\n[ULA-Cloud] Iniciando secuencia de apagado...\n");
     
     // TODO: Notificar y limpiar recursos de procesos hijos.
@@ -75,7 +76,7 @@ void handle_shutdown(int sig) {
         pthread_join(dashboard[i].monitor_thread, NULL); // Esperar a que el hilo monitor termine
     }
     
-    exit(sig);
+    exit(0);
 }
 
 int main(int argc, char *argv[]) {
