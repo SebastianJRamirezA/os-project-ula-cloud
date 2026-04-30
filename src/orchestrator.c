@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include "orchestrator.h"
 #include <sys/resource.h>
+#include <signal.h>
 
 /**
  * TODO: Implementar el despliegue del microservicio.
@@ -51,7 +52,20 @@ int spawn_service(int index) {
         dashboard[index].pid = pid;
         dashboard[index].state = STATE_RUNNING;
 
-        pthread_create(&dashboard[index].monitor_thread, NULL, monitor_service, (void *)&dashboard[index]);
+        int rc = pthread_create(&dashboard[index].monitor_thread, NULL, monitor_service, (void *)&dashboard[index]);
+        
+        // Manejo de error al crear el hilo monitor
+        if (rc != 0) {
+            fprintf(stderr, "[Error] No se pudo crear el hilo monitor para %s: %s\n", 
+                    dashboard[index].name, strerror(rc));
+            
+            // Intento de mitigación: matar al hijo que no tendrá monitor
+            kill(pid, SIGKILL); 
+            dashboard[index].state = STATE_CRASHED;
+            pthread_mutex_unlock(&dashboard_mutex);
+            return -1;
+        }
+
         pthread_mutex_unlock(&dashboard_mutex);
     }
 

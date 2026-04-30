@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     dashboard[2].mem_limit = 20 * 1024 * 1024; // Límite de 20MB
 
     if (argc > 1 && strcmp(argv[1], "--mem") ==0) {
-        size_t mem_limit = strtol(argv[2]) * 1024 * 1024; // Convertir MB a bytes
+        size_t mem_limit = atoi(argv[2]) * 1024 * 1024; // Convertir MB a bytes
         for (int i = 0; i < num_services; i++) {
             dashboard[i].mem_limit = mem_limit;
         }
