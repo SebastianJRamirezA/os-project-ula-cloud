@@ -31,10 +31,9 @@ void print_dashboard() {
     printf("--------------------------------------------------------------\n");
 
     // TODO: Renderizar cada fila del dashboard con la información actualizada.
+    pthread_mutex_lock(&dashboard_mutex);
     for(int i = 0; i < num_services; i++) {
-        pthread_mutex_lock(&dashboard_mutex);
         service_t svc = dashboard[i];
-        pthread_mutex_unlock(&dashboard_mutex);
 
         const char *state_str;
         switch (svc.state) {
@@ -48,6 +47,7 @@ void print_dashboard() {
 
         printf("%-15s %-10d %-15s %-10d\n", svc.name, svc.pid, state_str, svc.exit_status);
     }
+    pthread_mutex_unlock(&dashboard_mutex);
 
     printf("==============================================================\n");
 }
@@ -60,14 +60,16 @@ void handle_shutdown(int sig) {
     printf("\n[ULA-Cloud] Iniciando secuencia de apagado...\n");
     
     // TODO: Notificar y limpiar recursos de procesos hijos.
+    pthread_mutex_lock(&dashboard_mutex);
     for (int i = 0; i < num_services; i++) {
-        pthread_mutex_lock(&dashboard_mutex);
         if (dashboard[i].state == STATE_RUNNING) {
             printf("Terminando servicio %s (PID %d)...\n", dashboard[i].name, dashboard[i].pid);
             kill(dashboard[i].pid, SIGTERM); // Enviar señal de terminación
         }
-        pthread_mutex_unlock(&dashboard_mutex);
+    }
+    pthread_mutex_unlock(&dashboard_mutex);
 
+    for (int i = 0; i < num_services; i++) {
         pthread_join(dashboard[i].monitor_thread, NULL); // Esperar a que el hilo monitor termine
     }
     
@@ -100,7 +102,7 @@ int main(int argc, char *argv[]) {
     dashboard[2].mem_limit = 20 * 1024 * 1024; // Límite de 20MB
 
     if (argc > 1 && strcmp(argv[1], "--mem") ==0) {
-        size_t mem_limit = atoi(argv[2]) * 1024 * 1024; // Convertir MB a bytes
+        size_t mem_limit = strtol(argv[2]) * 1024 * 1024; // Convertir MB a bytes
         for (int i = 0; i < num_services; i++) {
             dashboard[i].mem_limit = mem_limit;
         }
